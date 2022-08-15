@@ -18,8 +18,8 @@ class ADDRESS
 	std::vector<byte>			restoredValues; //Should be unnecessary once we can read/write a custom number of bytes from vector
 
 public:
-	std::vector<byte>	ReadBytes(const wchar_t* processName, std::vector<unsigned int> offsets, unsigned int numBytes = 1, std::vector<byte> compareValues = {}); //Returns the bytes that were read
-	//std::vector<byte>   WriteBytes(const wchar_t* processName, std::vector<unsigned int> offsets, std::vector<byte> modifiedValues, std::vector<bool> byteMask) //Returns the bytes that were written
-	//uintptr_t			CreatePointer(processName, offsets, initialValues, modifiedValues); //Returns memory address
-	//uintptr_t			UpdatePointer(); //Returns memory address
+	uintptr_t			GetAddress(const wchar_t* processName, std::vector<unsigned int> offsets); //Returns address
+	std::vector<byte>	ReadBytes(const wchar_t* processName, std::vector<unsigned int> offsets, unsigned int numBytes = 1); //Returns the bytes that were read
+	std::vector<byte>   WriteBytes(const wchar_t* processName, std::vector<unsigned int> offsets, std::vector<byte> modifiedValues); //Returns the bytes that were written
+	std::vector<byte>   RestoreBytes(const wchar_t* processName, std::vector<unsigned int> offsets, std::vector<byte> modifiedValues); //Returns the bytes that were written
 };

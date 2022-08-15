@@ -27,8 +27,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
-    //CutsceneAddress.ReadBytes(processName, offsets, numBytes, compareValues);
-    CutsceneAddress.ReadBytes(L"rotk.exe", { 0x10C4EA }, 2, { 0x74, 0xB4, 0x8B, 0xC6, 0xE8, 0x8D, 0xFA, 0xFF, 0xFF });
+    //CutsceneAddress.ReadBytes(processName, offsets, numBytes);
+    CutsceneAddress.ReadBytes(L"rotk.exe", { 0x10C4EA }, 2);
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
