@@ -24,43 +24,17 @@ std::vector<byte> ADDRESS::ReadBytes(const wchar_t* processName, std::vector<uns
 	if (numBytes)
 	{
 		currentValues.resize(numBytes);
-
-		//baseOffset = offsets[0]; //Get base offset
-		//std::vector<unsigned int> otherOffsets(offsets.begin() + 1, offsets.end()); //Gets all offsets after the first
-
-		//offsets = { };																//{ 0x0, 0x0, 0x0 }
-		//processId = GetProcId(processName);											//Get pID
-		//moduleBase = GetModuleBaseAddress(processId, processName);					//Get module base address
-		//processHandle = 0;															//Get process handle
-		//processHandle = OpenProcess(PROCESS_ALL_ACCESS, NULL, processId);			//Open process
-		//pointerBase = moduleBase + baseOffset;										//Calculate offsets
-		//uintptr_t address = FindDMAAddy(processHandle, pointerBase, otherOffsets);	//Get address
-		////uintptr_t globalTargetAddress = address;
-
-		if (address = GetAddress(processName, offsets))
+		if (GetAddress(processName, offsets))
 			ReadProcessMemory(processHandle, (BYTE*)address, currentValues.data(), currentValues.size(), nullptr);
 
-		//MessageBox for debug output
-		if (address)
-		{
-			std::string outputText = std::to_string(address);
-			MessageBoxA(NULL, outputText.c_str(), "Title", MB_OK);
-		}
-
-		//MessageBox for debug output
-		int n = 1;
-		if (currentValues.size() >= n)
-		{
-			std::string outputText = std::to_string(currentValues[n]);
-			//std::string outputText = std::to_string(address);
-			MessageBoxA(NULL, outputText.c_str(), "Title", MB_OK);
-		}
-
-		//currentValues = modifiedValues;
-
-		//Prepare return values
-		std::vector<byte> currentValuesReturn = currentValues;
-		currentValuesReturn.resize(numBytes);
+		////MessageBox for debug output
+		//int n = 1;
+		//if (currentValues.size() >= n)
+		//{
+		//	std::string outputText = std::to_string(currentValues[n]);
+		//	//std::string outputText = std::to_string(address);
+		//	MessageBoxA(NULL, outputText.c_str(), "Title", MB_OK);
+		//}
 	}
 	return currentValues;
 }
@@ -68,15 +42,16 @@ std::vector<byte> ADDRESS::ReadBytes(const wchar_t* processName, std::vector<uns
 //// Write Byte Values
 std::vector<byte> ADDRESS::WriteBytes(const wchar_t* processName, std::vector<unsigned int> offsets, std::vector<byte> modifiedValues) //Returns the bytes that were written
 {
-	modifiedValues = { 0x74, 0x90 };
+	//modifiedValues = { 0x74, 0x90 };
 
 	currentValues = modifiedValues;
-	WriteProcessMemory(processHandle, (BYTE*)address, modifiedValues.data(), modifiedValues.size(), nullptr);
+	if (!WriteProcessMemory(processHandle, (BYTE*)address, currentValues.data(), currentValues.size(), nullptr))
+		currentValues = {};
 	return currentValues;
 }
-//std::vector<byte> ADDRESS::ReadBytes(const wchar_t* processName, std::vector<unsigned int> offsets, std::vector<byte> initialValues, std::vector<byte> modifiedValues, std::vector<bool> byteMask)
-//std::vector<byte> ADDRESS::WriteBytes(unsigned int numberOfBytes)
-//{
-//	//Write the addresses like what was happening in main() of the test program
-//	return currentValues;
-//}
+
+std::vector<byte> ADDRESS::SetRestore(std::vector<byte> restore)
+{
+	restoreValues == restore;
+	return restoreValues;
+}

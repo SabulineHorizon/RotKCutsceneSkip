@@ -28,7 +28,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // TODO: Place code here.
     //CutsceneAddress.ReadBytes(processName, offsets, numBytes);
-    CutsceneAddress.ReadBytes(L"rotk.exe", { 0x10C4EA }, 2);
+    const wchar_t* processName = L"rotk.exe";
+    std::vector<unsigned int> offsets = { 0x10C4EA };
+    std::vector<byte> expectedBytes = { 0x74, 0xB4 };
+    std::vector<byte> bytesToWrite = { 0x90, 0x90 };
+    std::vector<byte> restoreValues = {};
+    //std::vector<byte> expectedBytes = { 0x90, 0x90 };
+    //std::vector<byte> bytesToWrite = { 0x74, 0xB4 };
+
+    //If bytes match what we expect, it's probably the right address
+    if (CutsceneAddress.ReadBytes(processName, offsets, bytesToWrite.size()) == expectedBytes)
+        CutsceneAddress.WriteBytes(processName, offsets, bytesToWrite);
+    else
+        MessageBoxA(NULL, "Failed to write to process", "Title", MB_OK);
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -138,10 +150,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
             case IDM_EXIT:
-                //If currentValues == modifiedValues
-                //  currentValues = initialValues
-                //Else
-                //  error: something went wrong
                 DestroyWindow(hWnd);
                 break;
             default:
@@ -158,6 +166,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
+        CutsceneAddress.WriteBytes(L"rotk.exe", { 0x10C4EA }, { 0x74, 0xB4 });
         PostQuitMessage(0);
         break;
     default:
