@@ -7,10 +7,20 @@
 #define MAX_LOADSTRING 100
 
 // Global Variables:
-HINSTANCE hInst;                                // current instance
-WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
-ADDRESS CutsceneAddress;                        // RotK cutscene memory address object
+HINSTANCE hInst;                                    // current instance
+WCHAR szTitle[MAX_LOADSTRING];                      // The title bar text
+WCHAR szWindowClass[MAX_LOADSTRING];                // the main window class name
+    
+ADDRESS CutsceneAddress;                            // RotK cutscene memory address object
+const wchar_t* processName = L"rotk.exe";           // Process name of address to modify
+DWORD lastPID = 0;                                  // Used to recognize changes to the process
+DWORD currentPID = 0;                               // Used to compare currentPID to lastPID
+std::vector<unsigned int> offsets = { 0x10C4EA };   // Memory offsets used to find address
+std::vector<byte> expectedBytes = { 0x74, 0xB4 };   // Expected values to check that address is correct
+std::vector<byte> bytesToWrite = { 0x90, 0x90 };    // Values to write to address
+std::vector<byte> currentValues = {};               // Most recent values read from address
+std::vector<byte> restoreValues = {};               // Initial values to restore when finished
+
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -27,20 +37,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
-    //CutsceneAddress.ReadBytes(processName, offsets, numBytes);
-    const wchar_t* processName = L"rotk.exe";
-    std::vector<unsigned int> offsets = { 0x10C4EA };
-    std::vector<byte> expectedBytes = { 0x74, 0xB4 };
-    std::vector<byte> bytesToWrite = { 0x90, 0x90 };
-    std::vector<byte> restoreValues = {};
-    //std::vector<byte> expectedBytes = { 0x90, 0x90 };
-    //std::vector<byte> bytesToWrite = { 0x74, 0xB4 };
-
-    //If bytes match what we expect, it's probably the right address
-    if (CutsceneAddress.ReadBytes(processName, offsets, bytesToWrite.size()) == expectedBytes)
-        CutsceneAddress.WriteBytes(processName, offsets, bytesToWrite);
-    else
-        MessageBoxA(NULL, "Failed to write to process", "Title", MB_OK);
+    
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -123,6 +120,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
+   //Timer starts short, then gets longer after first run
+   SetTimer(hWnd, IDT_PROCESSTIMER, 500, (TIMERPROC)NULL); //0.5 second timer
+
    return TRUE;
 }
 
@@ -157,6 +157,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+    case WM_TIMER:
+        {
+            int wmId = LOWORD(wParam);
+            switch (wmId)
+            {
+            case IDT_PROCESSTIMER:
+                {
+                    //Check to see if process exists
+                    //MessageBoxA(NULL, std::to_string(LOWORD(hWnd)).c_str(), "Title", MB_OK);
+                    
+                    //if process is open
+                    currentPID = GetProcId(processName);
+                    if (currentPID && (currentPID != lastPID)) //Check if process is open and changed
+                    {
+                        currentValues = restoreValues = CutsceneAddress.ReadBytes(processName, offsets, bytesToWrite.size());
+                        if (currentValues == expectedBytes) //If bytes match what we expect, it's probably the right address
+                            CutsceneAddress.WriteBytes(processName, offsets, bytesToWrite);
+                        else
+                        {
+                            MessageBoxA(NULL, "Failed to write to process", "Title", MB_OK);
+                        }
+                        lastPID = currentPID;
+                    }
+
+                    SetTimer(hWnd, IDT_PROCESSTIMER, 2000, (TIMERPROC)NULL); //2 second timer
+                    //MessageBoxA(NULL, std::to_string(currentPID).c_str(), "Title", MB_OK);
+                }
+                break;
+            default:
+                return DefWindowProc(hWnd, message, wParam, lParam);
+            }
+        }
+        break;
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
@@ -166,7 +199,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
-        CutsceneAddress.WriteBytes(L"rotk.exe", { 0x10C4EA }, { 0x74, 0xB4 });
+        //Restore modified address to original value
+        CutsceneAddress.WriteBytes(processName, offsets, restoreValues);
         PostQuitMessage(0);
         break;
     default:
