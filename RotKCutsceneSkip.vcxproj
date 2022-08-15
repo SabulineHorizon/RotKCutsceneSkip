@@ -144,7 +144,6 @@
     <ClInclude Include="Memory.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RotKCutsceneSkip.h" />
-    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Address.cpp" />
@@ -156,7 +155,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="RotKCutsceneSkip.ico" />
-    <Image Include="small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

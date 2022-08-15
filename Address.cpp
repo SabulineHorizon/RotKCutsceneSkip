@@ -1,5 +1,4 @@
 #include "Address.h"
-#include <iostream>
 
 //GetAddress
 uintptr_t ADDRESS::GetAddress(const wchar_t* processName, std::vector<unsigned int> offsets) //Returns the bytes that were read

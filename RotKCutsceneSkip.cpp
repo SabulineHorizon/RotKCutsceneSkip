@@ -1,7 +1,6 @@
 // RotKCutsceneSkip.cpp : Defines the entry point for the application.
 //
 
-#include "framework.h"
 #include "RotKCutsceneSkip.h"
 
 #define MAX_LOADSTRING 100
@@ -20,6 +19,8 @@ std::vector<byte> expectedBytes = { 0x74, 0xB4 };   // Expected values to check 
 std::vector<byte> bytesToWrite = { 0x90, 0x90 };    // Values to write to address
 std::vector<byte> currentValues = {};               // Most recent values read from address
 std::vector<byte> restoreValues = {};               // Initial values to restore when finished
+LPCSTR statusText = "Initializing...";              // Process status display in the main window
+int statusColor = 0;                                // Display color for status text
 
 
 // Forward declarations of functions included in this code module:
@@ -90,7 +91,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_ROTKCUTSCENESKIP);
     wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_ROTKCUTSCENESKIP));
 
     return RegisterClassExW(&wcex);
 }
@@ -110,7 +111,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, 300, 150, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -121,7 +122,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    UpdateWindow(hWnd);
 
    //Timer starts short, then gets longer after first run
-   SetTimer(hWnd, IDT_PROCESSTIMER, 500, (TIMERPROC)NULL); //0.5 second timer
+   SetTimer(hWnd, IDT_PROCESSTIMER, 100, (TIMERPROC)NULL); //0.1 second timer
 
    return TRUE;
 }
@@ -164,25 +165,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case IDT_PROCESSTIMER:
                 {
-                    //Check to see if process exists
-                    //MessageBoxA(NULL, std::to_string(LOWORD(hWnd)).c_str(), "Title", MB_OK);
-                    
                     //if process is open
                     currentPID = GetProcId(processName);
                     if (currentPID && (currentPID != lastPID)) //Check if process is open and changed
                     {
                         currentValues = restoreValues = CutsceneAddress.ReadBytes(processName, offsets, bytesToWrite.size());
                         if (currentValues == expectedBytes) //If bytes match what we expect, it's probably the right address
+                        {
                             CutsceneAddress.WriteBytes(processName, offsets, bytesToWrite);
+                            UpdateStatusText(hWnd, "Process attached successfully", {0,100,0});
+                        }
                         else
                         {
-                            MessageBoxA(NULL, "Failed to write to process", "Title", MB_OK);
+                            UpdateStatusText(hWnd, "Failed to find memory address", {255, 0, 0});
                         }
                         lastPID = currentPID;
                     }
+                    else
+                    {
+                        if (!currentPID)
+                            UpdateStatusText(hWnd, "Unable to locate process...", { 150, 0, 0 });
+                    }
 
                     SetTimer(hWnd, IDT_PROCESSTIMER, 2000, (TIMERPROC)NULL); //2 second timer
-                    //MessageBoxA(NULL, std::to_string(currentPID).c_str(), "Title", MB_OK);
                 }
                 break;
             default:
@@ -194,7 +199,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
+
+            RECT rect;
+            HFONT font = CreateFontA(50, 0, 0, 0, FW_HEAVY, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            SetRect(&rect, 10, 10, 280, 130);
+            SetBkColor(hdc, RGB(255, 255, 255));
+            SetTextColor(hdc, statusColor);
+            DrawTextA(hdc, statusText, -1, &rect, DT_LEFT | DT_TOP);
+            SelectObject(hdc, font);
+
             EndPaint(hWnd, &ps);
         }
         break;
@@ -227,4 +240,13 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+// Updates process status text
+void UpdateStatusText(HWND hWnd, LPCSTR text, std::vector<byte> color)
+{
+    if (color.size() == 3)
+        statusColor = RGB(color[0], color[1], color[2]);
+    statusText = text;
+    InvalidateRect(hWnd, NULL, TRUE);
 }

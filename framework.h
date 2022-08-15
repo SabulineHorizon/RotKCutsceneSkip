@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "targetver.h"
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
@@ -12,6 +11,5 @@
 #include <vector>
 #include <Windows.h>
 #include <TlHelp32.h>
-#include <string>
 #include "Memory.h"
 #include "Address.h"
