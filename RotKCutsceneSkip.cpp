@@ -156,28 +156,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case IDT_PROCESSTIMER:
                 {
-                    //if process is open
-                    currentPID = GetProcId(processName);
-                    if (currentPID && (currentPID != lastPID)) //Check if process is open and changed
-                    {
-                        currentValues = restoreValues = CutsceneAddress.ReadBytes(processName, offsets, bytesToWrite.size());
-                        if (currentValues == expectedBytes) //If bytes match what we expect, it's probably the right address
-                        {
-                            CutsceneAddress.WriteBytes(processName, offsets, bytesToWrite);
-                            UpdateStatusText(hWnd, "Process attached successfully", {0,100,0});
-                        }
-                        else
-                        {
-                            UpdateStatusText(hWnd, "Failed to find memory address", {255, 0, 0});
-                        }
-                        lastPID = currentPID;
-                    }
-                    else
-                    {
-                        if (!currentPID)
-                            UpdateStatusText(hWnd, "Unable to locate process...", { 150, 0, 0 });
-                    }
-
+                    AttachToProcess(hWnd);
                     SetTimer(hWnd, IDT_PROCESSTIMER, 2000, (TIMERPROC)NULL); //2 second timer
                 }
                 break;
@@ -204,7 +183,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SetRect(&rect, 10, 30, 280, 60);
             DrawTextA(hdc, statusText, -1, &rect, DT_LEFT | DT_TOP);
             
-
             EndPaint(hWnd, &ps);
         }
         break;
@@ -237,6 +215,33 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+void AttachToProcess(HWND hWnd)
+{
+    //ToDo: If the address can't be found or if the expected bytes don't match, perform an AoB scan instead
+
+    //if process is open
+    currentPID = GetProcId(processName);
+    if (currentPID && (currentPID != lastPID)) //Check if process is open and changed
+    {
+        currentValues = restoreValues = CutsceneAddress.ReadBytes(processName, offsets, bytesToWrite.size());
+        if (currentValues == expectedBytes) //If bytes match what we expect, it's probably the right address
+        {
+            CutsceneAddress.WriteBytes(processName, offsets, bytesToWrite);
+            UpdateStatusText(hWnd, "Process attached successfully", { 0,100,0 });
+        }
+        else
+        {
+            UpdateStatusText(hWnd, "Failed to find memory address", { 255, 0, 0 });
+        }
+        lastPID = currentPID;
+    }
+    else
+    {
+        if (!currentPID)
+            UpdateStatusText(hWnd, "Unable to locate process...", { 150, 0, 0 });
+    }
 }
 
 // Updates process status text
