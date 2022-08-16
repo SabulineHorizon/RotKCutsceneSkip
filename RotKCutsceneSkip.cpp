@@ -1,5 +1,4 @@
 // RotKCutsceneSkip.cpp : Defines the entry point for the application.
-//
 
 #include "RotKCutsceneSkip.h"
 
@@ -38,8 +37,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
-    
-
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_ROTKCUTSCENESKIP, szWindowClass, MAX_LOADSTRING);
@@ -68,9 +65,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
-
-
-//
 //  FUNCTION: MyRegisterClass()
 //
 //  PURPOSE: Registers the window class.
@@ -96,7 +90,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-//
 //   FUNCTION: InitInstance(HINSTANCE, int)
 //
 //   PURPOSE: Saves instance handle and creates main window
@@ -111,7 +104,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, 300, 150, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, 300, 130, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -127,7 +120,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
-//
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
 //  PURPOSE: Processes messages for the main window.
@@ -135,8 +127,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_COMMAND  - process the application menu
 //  WM_PAINT    - Paint the main window
 //  WM_DESTROY  - post a quit message and return
-//
-//
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -201,12 +192,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             HDC hdc = BeginPaint(hWnd, &ps);
 
             RECT rect;
-            HFONT font = CreateFontA(50, 0, 0, 0, FW_HEAVY, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            SetRect(&rect, 10, 10, 280, 130);
-            SetBkColor(hdc, RGB(255, 255, 255));
-            SetTextColor(hdc, statusColor);
-            DrawTextA(hdc, statusText, -1, &rect, DT_LEFT | DT_TOP);
+            HFONT font = CreateFontA(25, 0, 0, 0, FW_HEAVY, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             SelectObject(hdc, font);
+            SetBkColor(hdc, RGB(255, 255, 255));
+
+            SetTextColor(hdc, 0);
+            SetRect(&rect, 10, 5, 280, 25);
+            DrawTextA(hdc, "Status:", -1, &rect, DT_LEFT | DT_TOP);
+
+            SetTextColor(hdc, statusColor);
+            SetRect(&rect, 10, 30, 280, 60);
+            DrawTextA(hdc, statusText, -1, &rect, DT_LEFT | DT_TOP);
+            
 
             EndPaint(hWnd, &ps);
         }
